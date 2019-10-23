@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from items import views
+from api.views import ItemListView, ItemDetailsView
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -31,6 +32,9 @@ urlpatterns = [
     path('user/logout/', views.user_logout, name='user-logout'),
 
     path('items/<int:item_id>/favorite/', views.item_favorite, name='item-favorite'),
+
+    path('api/items/list/', ItemListView.as_view(), name='api-item-list'),
+    path('api/items/details/<int:item_id>/', ItemDetailsView.as_view(), name='api-item-detail'),
 ]
 
 urlpatterns+=static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
