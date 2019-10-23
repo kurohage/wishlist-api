@@ -3,20 +3,47 @@ from django.contrib.auth.models import User
 
 from .models import Item, FavoriteItem
 
-class ItemSerializer(serializers.ModelSerializer):
+class ItemListSerializer(serializers.ModelSerializer):
 	detail = serializers.HyperlinkedIdentityField(
 			view_name='api-item-detail',
 			lookup_field='id',
 			lookup_url_kwarg='item_id'
 		)
 
+	added_by = serializers.SerializerMethodField()
+	total_favs = serializers.SerializerMethodField()
+
 	class Meta:
 		model = Item
-		fields = ['id', 'name', 'description', 'detail']
+		fields = ['id', 'name', 'description', 'added_by', 'total_favs','detail']
+
+	def get_added_by(self, object):
+		return UserSerializer(instance=object.added_by, read_only=True).data
+
+	def get_total_favs(self, object):
+		return FavoriteItem.objects.filter(item=object).count()
 
 
 class ItemDetailsSerializer(serializers.ModelSerializer):
+	fav_users = serializers.SerializerMethodField()
 
 	class Meta:
 		model = Item
-		fields = ['name', 'description', 'image', 'id']
+		fields = ['id', 'name', 'description', 'image', 'fav_users']
+
+	def get_fav_users(self, object):
+		users = FavoriteItem.objects.filter(item=object).values('user')
+		#print(users)
+
+		user_list = []
+		for user in users:
+			user_list.append(UserSerializer(instance=User.objects.get(id=user["user"])).data)
+
+		#print(user_list)
+
+		return user_list
+
+class UserSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = User	
+		fields = ['first_name', 'last_name']
