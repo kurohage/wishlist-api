@@ -3,6 +3,12 @@ from django.contrib.auth.models import User
 
 from .models import Item, FavoriteItem
 
+class UserSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = User	
+		fields = ['first_name', 'last_name']
+
+
 class ItemListSerializer(serializers.ModelSerializer):
 	detail = serializers.HyperlinkedIdentityField(
 			view_name='api-item-detail',
@@ -10,15 +16,17 @@ class ItemListSerializer(serializers.ModelSerializer):
 			lookup_url_kwarg='item_id'
 		)
 
-	added_by = serializers.SerializerMethodField()
+	#added_by = serializers.SerializerMethodField()
+	added_by = UserSerializer() # the field name 'added_by' has to match the field name in the model for it to be auto detected as a User object
 	total_favs = serializers.SerializerMethodField()
 
 	class Meta:
 		model = Item
 		fields = ['id', 'name', 'description', 'added_by', 'total_favs','detail']
 
-	def get_added_by(self, object):
-		return UserSerializer(instance=object.added_by, read_only=True).data
+	# this is not needed when feeding the object directly to the serializer as it matches the field name in the model
+	#def get_added_by(self, object):
+	#	return UserSerializer(instance=object.added_by, read_only=True).data
 
 	def get_total_favs(self, object):
 		return FavoriteItem.objects.filter(item=object).count()
@@ -43,7 +51,3 @@ class ItemDetailsSerializer(serializers.ModelSerializer):
 
 		return user_list
 
-class UserSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = User	
-		fields = ['first_name', 'last_name']
