@@ -40,14 +40,21 @@ class ItemDetailsSerializer(serializers.ModelSerializer):
 		fields = ['id', 'name', 'description', 'image', 'fav_users']
 
 	def get_fav_users(self, object):
-		users = FavoriteItem.objects.filter(item=object).distinct().values('user')
+		#users = FavoriteItem.objects.filter(item=object).distinct().values('user')
 		#print(users)
+		favs = object.favoriteitem_set.all()
+		users = []
 
-		user_list = []
-		for user in users:
-			user_list.append(UserSerializer(instance=User.objects.get(id=user["user"])).data)
+		for fav in favs:
+			users.append(fav.user)
+
+		#user_list = []
+		#for user in users:
+		#	user_list.append(UserSerializer(instance=User.objects.get(id=user["user"])).data)
 
 		#print(user_list)
 
-		return user_list
+		#return user_list
+
+		return UserSerializer(users, many=True).data
 
